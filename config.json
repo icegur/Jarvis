@@ -1,0 +1,11 @@
+{
+  "discord": {
+    "token": "",
+    "server": "iceproject",
+    "channel": "builds",
+    "game": "SyntaxError"
+  },
+  "webserver": {
+    "port": 9002
+  }
+}
