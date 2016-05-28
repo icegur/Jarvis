@@ -26,13 +26,25 @@ function handleHttpRequest(request, response) {
 
     // Called when the request has finished being received
     request.on('end', function() {
+        var time = new Date().getTime().toString();
+
         // Send a response back to GitHub
         response.end();
 
-        var body = JSON.parse(textBody);
+        try {
+            var body = JSON.parse(textBody);
+        } catch (error) {
+            // Any error other than SyntaxError will get thrown
+            if (error.message.indexOf("SyntaxError") != -1) {
+                throw error;
+            }
+
+            // SyntaxError caused by invalid json
+            console.log("Invalid json. Writing to file.");
+            fs.writeFile("data/" + time + "-invalid.txt", textBody);
+        }
 
         // For debugging
-        var time = new Date().getTime().toString();
         fs.writeFile("data/" + time + "-body.json", JSON.stringify(body, null, 2));
         fs.writeFile("data/" + time + "-headers.json", JSON.stringify(request.headers, null, 2));
 
