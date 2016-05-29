@@ -60,6 +60,8 @@ function handleHttpRequest(request, response) {
             processIssueComment(body);
         } else if (type == "pull_request") {
             processPullRequest(body);
+        } else if (type == "pull_request_review_comment") {
+            processPullRequestComment(body);
         }
     });
 }
@@ -98,11 +100,12 @@ function processIssueAction(data) {
 function processIssueComment(data) {
     var user = data["comment"]["user"]["login"];
     var repository = data["repository"]["full_name"];
+    var action = data["action"];
     var comment = data["comment"]["body"];
     var issueNum = data["issue"]["number"];
     var commentLink = data["comment"]["html_url"];
 
-    var message = user + " commented on " + repository + "#" + issueNum;
+    var message = user + " " + action + " comment on issue " + repository + "#" + issueNum;
     message += "\n" + comment;
     message += "\n\nLink: " + commentLink;
 
@@ -120,6 +123,21 @@ function processPullRequest(data) {
     var message = user + " " + action + " pull requst " + repository + "#" + prNum;
     message += "\n" + prTitle;
     message += "\n\nLink: " + prLink;
+
+    sendMessageToDiscord(message);
+}
+
+function processPullRequestComment(data) {
+    var user = data["comment"]["user"]["login"];
+    var repository = data["repository"]["full_name"];
+    var action = data["action"];
+    var comment = data["comment"]["body"];
+    var prNum = data["pull_request"]["number"];
+    var commentLink = data["comment"]["html_url"];
+
+    var message = user + " " + action + " comment on pull requset " + repository + "#" + prNum;
+    message += "\n" + comment;
+    message += "\n\nLink: " + commentLink;
 
     sendMessageToDiscord(message);
 }
