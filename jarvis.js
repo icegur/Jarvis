@@ -28,21 +28,23 @@ function handleHttpRequest(request, response) {
     request.on('end', function() {
         var time = new Date().getTime().toString();
 
-        // Send a response back to GitHub
-        response.end();
-
         try {
             var body = JSON.parse(textBody);
         } catch (error) {
             // Any error other than SyntaxError will get thrown
             if (error.message.indexOf("SyntaxError") != -1) {
+                response.end("error");
+
                 throw error;
             }
 
             // SyntaxError caused by invalid json
-            console.log("Invalid json. Writing to file.");
+            response.end("error: invalid json");
+
             fs.writeFile("data/" + time + "-invalid.txt", textBody);
         }
+
+        response.end("success");
 
         // For debugging
         fs.writeFile("data/" + time + "-body.json", JSON.stringify(body, null, 2));
@@ -56,6 +58,8 @@ function handleHttpRequest(request, response) {
             processIssueAction(body);
         } else if (type == "issue_comment") {
             processIssueComment(body);
+        } else if (type == "pull_request") {
+            processPullRequest(body);
         }
     });
 }
@@ -83,7 +87,7 @@ function processIssueAction(data) {
     var issueTitle = data["issue"]["title"];
     var issueLink = data["issue"]["html_url"];
 
-    var message = user + " " + action + " " + repository + "#" + issueNum;
+    var message = user + " " + action + " issue " + repository + "#" + issueNum;
     message += "\n" + issueTitle;
     message += "\n\nLink: " + issueLink;
 
@@ -101,6 +105,21 @@ function processIssueComment(data) {
     var message = user + " commented on " + repository + "#" + issueNum;
     message += "\n" + comment;
     message += "\n\nLink: " + commentLink;
+
+    sendMessageToDiscord(message);
+}
+
+function processPullRequest(data) {
+    var user = data["pull_request"]["user"]["login"];
+    var repository = data["repository"]["full_name"];
+    var action = data["action"];
+    var prNum = data["pull_request"]["number"];
+    var prTitle = data["pull_request"]["title"];
+    var prLink = data["pull_request"]["html_url"];
+
+    var message = user + " " + action + " pull requst " + repository + "#" + prNum;
+    message += "\n" + prTitle;
+    message += "\n\nLink: " + prLink;
 
     sendMessageToDiscord(message);
 }
